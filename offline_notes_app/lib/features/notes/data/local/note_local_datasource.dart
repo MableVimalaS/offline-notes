@@ -1,5 +1,5 @@
-import 'package:offline_notes_app/features/notes/data/models/data-sync.dart';
-import 'package:offline_notes_app/features/notes/data/models/note-model.dart';
+import 'package:offline_notes_app/features/notes/data/models/data_sync.dart';
+import 'package:offline_notes_app/features/notes/data/models/note_model.dart';
 
 abstract class NoteLocalDataSource {
   Future<void> addNote(NoteModel note);

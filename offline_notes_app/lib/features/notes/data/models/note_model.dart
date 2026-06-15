@@ -1,13 +1,12 @@
-import 'package:offline_notes_app/features/notes/data/enum/notes-enum.dart';
+import 'package:equatable/equatable.dart';
+import 'package:offline_notes_app/features/notes/data/enum/notes_enum.dart';
 
-class NoteModel {
+class NoteModel extends Equatable {
   final String id;
   final String title;
   final String body;
-
   final DateTime updatedAt;
   final DateTime? lastSyncedAt;
-
   final SyncStatus syncStatus;
   final bool isDeleted;
 
@@ -55,18 +54,29 @@ class NoteModel {
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
     return NoteModel(
-      id: json['id'],
-      title: json['title'],
-      body: json['body'],
-      updatedAt: DateTime.parse(json['updatedAt']),
+      id: json['id'] as String,
+      title: json['title'] as String,
+      body: json['body'] as String,
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
       lastSyncedAt: json['lastSyncedAt'] != null
-          ? DateTime.parse(json['lastSyncedAt'])
+          ? DateTime.parse(json['lastSyncedAt'] as String)
           : null,
       syncStatus: SyncStatus.values.firstWhere(
         (e) => e.name == json['syncStatus'],
         orElse: () => SyncStatus.pending,
       ),
-      isDeleted: json['isDeleted'] ?? false,
+      isDeleted: json['isDeleted'] as bool? ?? false,
     );
   }
+
+  @override
+  List<Object?> get props => [
+        id,
+        title,
+        body,
+        updatedAt,
+        lastSyncedAt,
+        syncStatus,
+        isDeleted,
+      ];
 }

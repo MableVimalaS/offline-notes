@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.12.2
+  sdk: ">=3.11.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -31,11 +31,13 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
 
-  dio: ^5.9.0
   connectivity_plus: ^7.0.0
-
+  logger: ^2.6.0
   uuid: ^4.5.1
-  intl: ^0.20.2
+
+  flutter_animate: ^4.5.0   # micro-animations on cards
+  shimmer: ^3.0.0            # skeleton loading grid
+  lottie: ^3.1.2             # animated empty state — add .json files to use it
 
 dev_dependencies:
   flutter_test:
@@ -43,8 +45,9 @@ dev_dependencies:
 
   bloc_test: ^10.0.0
   mocktail: ^1.0.4
-  uuid: ^4.5.1
-  connectivity_plus: ^7.0.0
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/animations/Empty.json

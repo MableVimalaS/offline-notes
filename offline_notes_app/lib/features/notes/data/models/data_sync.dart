@@ -1,10 +1,9 @@
-import 'package:offline_notes_app/features/notes/data/enum/operation-enum.dart';
+import 'package:offline_notes_app/features/notes/data/enum/operation_enum.dart';
 
 class SyncOperation {
   final String noteId;
   final OperationType operationType;
   final DateTime createdAt;
-  
 
   const SyncOperation({
     required this.noteId,
@@ -20,11 +19,11 @@ class SyncOperation {
 
   factory SyncOperation.fromJson(Map<String, dynamic> json) {
     return SyncOperation(
-      noteId: json['noteId'],
+      noteId: json['noteId'] as String,
       operationType: OperationType.values.firstWhere(
         (e) => e.name == json['operationType'],
       ),
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 }
