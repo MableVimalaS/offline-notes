@@ -1,7 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:offline_notes_app/features/notes/data/models/data_sync.dart';
 import 'package:offline_notes_app/features/notes/data/models/note_model.dart';
 import 'package:offline_notes_app/features/notes/data/repositories/contract/note_repository.dart';
 import 'package:offline_notes_app/features/notes/presentation/bloc/notes_bloc.dart';

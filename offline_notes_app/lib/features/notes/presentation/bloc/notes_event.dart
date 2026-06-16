@@ -38,3 +38,13 @@ class DeleteNote extends NotesEvent {
   @override
   List<Object?> get props => [noteId];
 }
+
+class ResolveConflict extends NotesEvent {
+  final String noteId;
+  final bool keepLocal;
+
+  const ResolveConflict({required this.noteId, required this.keepLocal});
+
+  @override
+  List<Object?> get props => [noteId, keepLocal];
+}

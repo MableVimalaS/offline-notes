@@ -11,4 +11,5 @@ abstract class NoteRepository {
   Future<List<NoteModel>> getNotes();
 
   Future<List<SyncOperation>> getPendingOperations();
+  Future<void> resolveConflict(String noteIds, {required bool keepLocal});
 }

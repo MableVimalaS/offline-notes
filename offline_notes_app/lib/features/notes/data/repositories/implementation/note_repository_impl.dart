@@ -21,6 +21,10 @@ class NoteRepositoryImpl implements NoteRepository {
   Future<List<NoteModel>> getNotes() => localDataSource.getAllNotes();
 
   @override
+  Future<void> resolveConflict(String noteId, {required bool keepLocal}) =>
+      localDataSource.resolveConflict(noteId, keepLocal: keepLocal);
+
+  @override
   Future<List<SyncOperation>> getPendingOperations() =>
       localDataSource.getPendingOperations();
 }

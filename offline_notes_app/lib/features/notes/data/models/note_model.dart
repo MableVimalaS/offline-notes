@@ -9,6 +9,9 @@ class NoteModel extends Equatable {
   final DateTime? lastSyncedAt;
   final SyncStatus syncStatus;
   final bool isDeleted;
+  final String? serverTitle;
+  final String? serverBody;
+  final DateTime? serverUpdatedAt;
 
   const NoteModel({
     required this.id,
@@ -18,8 +21,11 @@ class NoteModel extends Equatable {
     this.lastSyncedAt,
     this.syncStatus = SyncStatus.pending,
     this.isDeleted = false,
+    this.serverTitle,
+    this.serverBody,
+    this.serverUpdatedAt,
   });
-
+static const _keep = Object();
   NoteModel copyWith({
     String? id,
     String? title,
@@ -28,6 +34,9 @@ class NoteModel extends Equatable {
     DateTime? lastSyncedAt,
     SyncStatus? syncStatus,
     bool? isDeleted,
+    Object? serverTitle = _keep,
+    Object? serverBody = _keep,
+    Object? serverUpdatedAt = _keep,
   }) {
     return NoteModel(
       id: id ?? this.id,
@@ -37,6 +46,9 @@ class NoteModel extends Equatable {
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       syncStatus: syncStatus ?? this.syncStatus,
       isDeleted: isDeleted ?? this.isDeleted,
+      serverTitle: serverTitle == _keep ? this.serverTitle : serverTitle as String?,
+      serverBody: serverBody == _keep ? this.serverBody : serverBody as String?,
+      serverUpdatedAt: serverUpdatedAt == _keep ? this.serverUpdatedAt : serverUpdatedAt as DateTime?,
     );
   }
 
@@ -49,6 +61,9 @@ class NoteModel extends Equatable {
       'lastSyncedAt': lastSyncedAt?.toIso8601String(),
       'syncStatus': syncStatus.name,
       'isDeleted': isDeleted,
+      'serverTitle': serverTitle,
+      'serverBody': serverBody,
+      'serverUpdatedAt': serverUpdatedAt?.toIso8601String(),
     };
   }
 
@@ -66,6 +81,11 @@ class NoteModel extends Equatable {
         orElse: () => SyncStatus.pending,
       ),
       isDeleted: json['isDeleted'] as bool? ?? false,
+      serverTitle: json['serverTitle'] as String?,
+      serverBody: json['serverBody'] as String?,
+      serverUpdatedAt: json['serverUpdatedAt'] != null
+          ? DateTime.parse(json['serverUpdatedAt'] as String)
+          : null,
     );
   }
 
@@ -78,5 +98,10 @@ class NoteModel extends Equatable {
         lastSyncedAt,
         syncStatus,
         isDeleted,
+        serverTitle,
+        serverBody,
+        serverUpdatedAt,
       ];
+
+  void operator [](String other) {}
 }

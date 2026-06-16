@@ -14,6 +14,7 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     on<AddNote>(_onAddNote);
     on<UpdateNote>(_onUpdateNote);
     on<DeleteNote>(_onDeleteNote);
+    on<ResolveConflict>(_onResolveConflict);
   }
 
   Future<void> _onLoadNotes(
@@ -66,6 +67,20 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
       await repository.deleteNote(event.noteId);
     } on Exception catch (e) {
       _log.e('Failed to delete note ${event.noteId}', error: e);
+    }
+    add(const LoadNotes());
+  }
+Future<void> _onResolveConflict(
+    ResolveConflict event,
+    Emitter<NotesState> emit,
+  ) async {
+    try {
+      await repository.resolveConflict(
+        event.noteId,
+        keepLocal: event.keepLocal,
+      );
+    } on Exception catch (e) {
+      _log.e('Failed to resolve conflict', error: e);
     }
     add(const LoadNotes());
   }

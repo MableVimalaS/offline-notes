@@ -15,6 +15,54 @@ class SyncService {
   final NoteRemoteDataSource remoteDataSource = NoteRemoteDataSource();
 
   Future<void> sync() async {
+    await _detectConflicts();
+    await _pushPending();
+    await _pullNewNotes();
+  }
+
+  Future<void> _detectConflicts() async {
+    try {
+      final serverNotes = await remoteDataSource.fetchNotes();
+      final serverMap = {
+        for (final n in serverNotes) n['id'] as String: n,
+      };
+
+      for (final key in notesBox.keys.toList()) {
+        final localData = notesBox.get(key);
+        if (localData == null) continue;
+
+        final local = NoteModel.fromJson(Map<String, dynamic>.from(localData));
+
+        if (local.syncStatus != SyncStatus.pending) continue;
+        if (local.lastSyncedAt == null) continue;
+
+        final serverData = serverMap[local.id];
+        if (serverData == null) continue;
+
+        final serverUpdatedAt =
+            DateTime.parse(serverData['updatedAt'] as String);
+
+        if (serverUpdatedAt.isAfter(local.lastSyncedAt!)) {
+          _log.d('Conflict detected for ${local.id}');
+          await notesBox.put(
+            local.id,
+            local
+                .copyWith(
+                  syncStatus: SyncStatus.conflict,
+                  serverTitle: serverData['title'] as String,
+                  serverBody: serverData['body'] as String? ?? '',
+                  serverUpdatedAt: serverUpdatedAt,
+                )
+                .toJson(),
+          );
+        }
+      }
+    } catch (e) {
+      _log.e('Conflict detection failed — continuing sync', error: e);
+    }
+  }
+
+  Future<void> _pushPending() async {
     final keys = queueBox.keys.toList();
     _log.d('Pending sync operations: ${keys.length}');
 
@@ -25,22 +73,24 @@ class SyncService {
       final operation = SyncOperation.fromJson(
         Map<String, dynamic>.from(data),
       );
-      _log.d(
-        'Syncing ${operation.operationType.name} for ${operation.noteId}',
-      );
+
+      final noteData = notesBox.get(operation.noteId);
+      if (noteData != null) {
+        final note = NoteModel.fromJson(Map<String, dynamic>.from(noteData));
+        if (note.syncStatus == SyncStatus.conflict) continue;
+      }
+
+      _log.d('Syncing ${operation.operationType.name} for ${operation.noteId}');
 
       try {
         switch (operation.operationType) {
           case OperationType.delete:
-            // Note is already removed locally; notify the remote server.
             await remoteDataSource.deleteNote(operation.noteId);
             await queueBox.delete(key);
 
           case OperationType.create:
           case OperationType.update:
-            final noteData = notesBox.get(operation.noteId);
             if (noteData == null) {
-              // Note was removed before sync could run — skip safely.
               await queueBox.delete(key);
               break;
             }
@@ -66,12 +116,55 @@ class SyncService {
             await queueBox.delete(key);
         }
       } catch (e) {
-        // Leave failed operations in the queue for retry on next sync.
-        _log.e(
-          'Sync failed for ${operation.noteId} — will retry',
-          error: e,
-        );
+        _log.e('Sync failed for ${operation.noteId} — will retry', error: e);
       }
+    }
+  }
+
+  Future<void> _pullNewNotes() async {
+    try {
+      final serverNotes = await remoteDataSource.fetchNotes();
+
+      for (final serverData in serverNotes) {
+        final serverId = serverData['id'] as String;
+        final serverUpdatedAt =
+            DateTime.parse(serverData['updatedAt'] as String);
+        final localData = notesBox.get(serverId);
+
+        if (localData == null) {
+          await notesBox.put(
+            serverId,
+            NoteModel(
+              id: serverId,
+              title: serverData['title'] as String,
+              body: serverData['body'] as String? ?? '',
+              updatedAt: serverUpdatedAt,
+              syncStatus: SyncStatus.synced,
+              lastSyncedAt: DateTime.now(),
+            ).toJson(),
+          );
+        } else {
+          final local =
+              NoteModel.fromJson(Map<String, dynamic>.from(localData));
+
+          if (local.syncStatus == SyncStatus.synced &&
+              serverUpdatedAt.isAfter(local.updatedAt)) {
+            await notesBox.put(
+              serverId,
+              NoteModel(
+                id: serverId,
+                title: serverData['title'] as String,
+                body: serverData['body'] as String? ?? '',
+                updatedAt: serverUpdatedAt,
+                syncStatus: SyncStatus.synced,
+                lastSyncedAt: DateTime.now(),
+              ).toJson(),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      _log.e('Pull failed', error: e);
     }
   }
 }

@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'package:offline_notes_app/features/notes/services/hive-service.dart';
+import 'package:offline_notes_app/features/notes/services/hive_service.dart';
 
 
 final notesBox =

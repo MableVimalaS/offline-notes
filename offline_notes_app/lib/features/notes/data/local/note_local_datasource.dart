@@ -11,4 +11,5 @@ abstract class NoteLocalDataSource {
   Future<List<NoteModel>> getAllNotes();
 
   Future<List<SyncOperation>> getPendingOperations();
+  Future<void> resolveConflict(String noteIds, {required bool keepLocal});
 }

@@ -71,6 +71,10 @@ class _NotesPageState extends State<NotesPage>
   }
 
   void _openNote({NoteModel? note}) {
+    if(note != null && note.syncStatus == SyncStatus.conflict) {
+     _showConflictDialog(note);
+      return;
+    }
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -219,6 +223,109 @@ class _NotesPageState extends State<NotesPage>
             ),
           );
         },
+      ),
+    );
+  }
+  
+ void _showConflictDialog(NoteModel note) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceVariant,
+        title: const Text(
+          'Conflict Detected',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'This note was edited on the server while you were offline.',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            _conflictVersion(
+              label: 'Your Version',
+              title: note.title,
+              body: note.body,
+            ),
+            const SizedBox(height: 12),
+            _conflictVersion(
+              label: 'Server Version',
+              title: note.serverTitle ?? '',
+              body: note.serverBody ?? '',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<NotesBloc>().add(
+                    ResolveConflict(noteId: note.id, keepLocal: false),
+                  );
+            },
+            child: const Text(
+              'Use Server Version',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<NotesBloc>().add(
+                    ResolveConflict(noteId: note.id, keepLocal: true),
+                  );
+            },
+            child: const Text('Keep Mine'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _conflictVersion({
+    required String label,
+    required String title,
+    required String body,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.textTertiary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (body.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              body,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -437,6 +544,17 @@ class _NoteCard extends StatelessWidget {
                             ),
                           ),
                         ],
+                      if(note.syncStatus == SyncStatus.conflict) ...[
+                          const Spacer(),
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.error,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ]
                       ],
                     ),
                   ],
