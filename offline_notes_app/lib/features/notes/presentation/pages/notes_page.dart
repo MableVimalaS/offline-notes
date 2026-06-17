@@ -49,13 +49,12 @@ class _NotesPageState extends State<NotesPage>
       if (mounted) setState(() => _isOnline = online);
       if (online) await _runSync();
     });
-    // Periodic poll as fallback — emulators don't always fire connectivity broadcasts
+    // Periodic poll — updates icon and auto-syncs whenever online
     _connectivityTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
       final online = await connectivityService.isConnected;
-      if (mounted && online != _isOnline) {
-        setState(() => _isOnline = online);
-        if (online) _runSync();
-      }
+      if (!mounted) return;
+      if (online != _isOnline) setState(() => _isOnline = online);
+      if (online) _runSync();
     });
   }
 

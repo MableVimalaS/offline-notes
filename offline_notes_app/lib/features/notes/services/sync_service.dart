@@ -132,6 +132,17 @@ class SyncService {
         final localData = notesBox.get(serverId);
 
         if (localData == null) {
+          final hasPendingDelete = queueBox.values.any((v) {
+            try {
+              final op = SyncOperation.fromJson(Map<String, dynamic>.from(v));
+              return op.noteId == serverId &&
+                  op.operationType == OperationType.delete;
+            } catch (_) {
+              return false;
+            }
+          });
+          if (hasPendingDelete) continue;
+
           await notesBox.put(
             serverId,
             NoteModel(
