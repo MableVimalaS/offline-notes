@@ -546,8 +546,7 @@ class _NoteCard extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                        ],
-                      if(note.syncStatus == SyncStatus.conflict) ...[
+                        ] else if (note.syncStatus == SyncStatus.conflict) ...[
                           const Spacer(),
                           Container(
                             width: 7,
@@ -556,6 +555,13 @@ class _NoteCard extends StatelessWidget {
                               color: AppTheme.error,
                               shape: BoxShape.circle,
                             ),
+                          ),
+                        ] else if (note.syncStatus == SyncStatus.synced) ...[
+                          const Spacer(),
+                          const Icon(
+                            Icons.cloud_done_outlined,
+                            size: 13,
+                            color: Color(0xFF30D158),
                           ),
                         ]
                       ],
