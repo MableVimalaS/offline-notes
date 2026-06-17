@@ -1,4 +1,4 @@
-# Offline Notes
+# Scribble
 
 A Flutter notes app that works fully offline and synchronizes to a REST API deployed on Railway when connectivity is restored. Built with BLoC, Hive, and a Bun/Hono backend.
 
