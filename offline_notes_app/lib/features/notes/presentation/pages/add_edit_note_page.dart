@@ -51,7 +51,10 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
 
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title cannot be empty')),
+        const SnackBar(
+          content: Text('Title cannot be empty'),
+          duration: Duration(seconds: 3),
+        ),
       );
       return;
     }

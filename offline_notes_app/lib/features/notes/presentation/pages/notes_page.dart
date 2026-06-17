@@ -28,6 +28,7 @@ class _NotesPageState extends State<NotesPage>
   bool _isSyncing = false;
   String _searchQuery = '';
   late final StreamSubscription<bool> _connectivitySub;
+  Timer? _connectivityTimer;
   final TextEditingController _searchController = TextEditingController();
   late final AnimationController _syncAnimController;
 
@@ -39,16 +40,29 @@ class _NotesPageState extends State<NotesPage>
       duration: const Duration(milliseconds: 1000),
     );
     context.read<NotesBloc>().add(const LoadNotes());
-    _connectivitySub =
-        ConnectivityService().connectionStream.listen((online) async {
-      setState(() => _isOnline = online);
+    final connectivityService = ConnectivityService();
+    connectivityService.isConnected.then((online) {
+      if (mounted) setState(() => _isOnline = online);
+      if (online) _runSync();
+    });
+    _connectivitySub = connectivityService.connectionStream.listen((online) async {
+      if (mounted) setState(() => _isOnline = online);
       if (online) await _runSync();
+    });
+    // Periodic poll as fallback — emulators don't always fire connectivity broadcasts
+    _connectivityTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      final online = await connectivityService.isConnected;
+      if (mounted && online != _isOnline) {
+        setState(() => _isOnline = online);
+        if (online) _runSync();
+      }
     });
   }
 
   @override
   void dispose() {
     _connectivitySub.cancel();
+    _connectivityTimer?.cancel();
     _searchController.dispose();
     _syncAnimController.dispose();
     super.dispose();
@@ -100,7 +114,7 @@ class _NotesPageState extends State<NotesPage>
       ..showSnackBar(
         SnackBar(
           content: const Text('Note deleted'),
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: 'Undo',
             onPressed: () => context.read<NotesBloc>().add(AddNote(note)),
@@ -143,13 +157,9 @@ class _NotesPageState extends State<NotesPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _openNote(),
-        icon: const Icon(Icons.add, size: 20),
-        label: const Text(
-          'New Note',
-          style: TextStyle(fontWeight: FontWeight.w600, letterSpacing: -0.2),
-        ),
+        child: const Icon(Icons.add, size: 30),
       ),
       body: BlocBuilder<NotesBloc, NotesState>(
         builder: (context, state) {
@@ -362,13 +372,6 @@ class _Header extends StatelessWidget {
                 Text(
                   'My Notes',
                   style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  noteCount == 0
-                      ? 'No notes yet'
-                      : '$noteCount note${noteCount == 1 ? '' : 's'}',
-                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
@@ -615,7 +618,7 @@ class _EmptyView extends StatelessWidget {
             Text(
               isFiltering
                   ? 'Try a different search term'
-                  : 'Tap New Note to write your first one',
+                  : 'Tap + to write your first one',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppTheme.textSecondary,

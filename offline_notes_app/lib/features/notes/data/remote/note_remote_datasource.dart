@@ -4,16 +4,16 @@ import 'package:logger/web.dart';
 import 'package:offline_notes_app/features/notes/data/models/note_model.dart';
 
 const _baseUrl = 'https://function-bun-production-b979.up.railway.app';
-final _log =Logger();
+final _log = Logger();
 
 class NoteRemoteDataSource {
   Future<void> createNote(NoteModel note) async {
-   http.Response response = await http.post(
+    http.Response response = await http.post(
       Uri.parse('$_baseUrl/notes'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(note.toJson()),
     );
-    if (response.statusCode == 201) {
+    if (response.statusCode != 201) {
       throw Exception('Failed to create note ${response.statusCode}');
     } else {
       _log.d('Server: Created ${note.id}');
@@ -26,7 +26,7 @@ class NoteRemoteDataSource {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(note.toJson()),
     );
-    if (response.statusCode == 200) {
+    if (response.statusCode != 200) {
       throw Exception('Failed to update note ${response.statusCode}');
     } else {
       _log.d('Server: Updated ${note.id}');
@@ -37,17 +37,18 @@ class NoteRemoteDataSource {
     http.Response response = await http.delete(
       Uri.parse('$_baseUrl/notes/$noteId'),
     );
-    if (response.statusCode == 200) {
+    if (response.statusCode != 200) {
       throw Exception('Failed to delete note ${response.statusCode}');
     } else {
       _log.d('Server: Deleted $noteId');
     }
   }
-  Future<List<NoteModel>> fetchNotes() async {
+
+  Future<List<Map<String, dynamic>>> fetchNotes() async {
     http.Response response = await http.get(Uri.parse('$_baseUrl/notes'));
     if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => NoteModel.fromJson(json)).toList();
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
     } else {
       throw Exception('Failed to load notes ${response.statusCode}');
     }
