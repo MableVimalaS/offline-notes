@@ -1,6 +1,21 @@
 # Offline Notes
 
-A Flutter notes app that works fully offline and syncs to a remote server when connectivity is restored. Built with BLoC, Hive, and a Bun/Hono backend deployed on Railway.
+A Flutter notes app that works fully offline and synchronizes to a REST API deployed on Railway when connectivity is restored. Built with BLoC, Hive, and a Bun/Hono backend.
+
+---
+
+## Screenshots
+
+### App
+
+![App Screenshot](screenshots/app_screenshot.png)
+
+### Mock REST API — Deployed on Railway
+
+![Railway Dashboard](screenshots/railway_dashboard.png)
+
+> The mock REST API is built with **Bun + Hono** and deployed on [Railway](https://railway.app).
+> Live URL: `https://function-bun-production-b979.up.railway.app`
 
 ---
 
@@ -11,6 +26,7 @@ A Flutter notes app that works fully offline and syncs to a remote server when c
 - **Conflict detection** — flags notes modified both locally and on the server while offline
 - **Conflict resolution** — choose to keep your local version or accept the server version
 - **Real-time connectivity indicator** — cloud icon reflects network state within 3 seconds
+- **Sync status on every note** — green cloud (synced), orange dot (pending), red dot (conflict)
 - **Search** — filter notes by title or body instantly
 - **Shimmer skeleton** — smooth loading state while notes are fetched
 - **Animated empty state** — Lottie animation when no notes exist
@@ -41,11 +57,11 @@ lib/
 └── main.dart
 ```
 
-**State management:** BLoC  
-**Local storage:** Hive (no-SQL, key-value)  
-**Remote storage:** Bun + Hono REST API on Railway  
-**Connectivity:** connectivity_plus  
-**Animations:** flutter_animate, Lottie, Shimmer  
+**State management:** BLoC
+**Local storage:** Hive (no-SQL, key-value)
+**Remote storage:** Bun + Hono REST API on Railway
+**Connectivity:** connectivity_plus
+**Animations:** flutter_animate, Lottie, Shimmer
 
 ---
 
@@ -65,7 +81,39 @@ App starts
             └─► Pull new notes from server
 ```
 
-Notes in conflict are flagged with a warning indicator. Tapping them opens a resolution dialog.
+Notes in conflict are flagged with a red dot. Tapping them opens a resolution dialog showing both versions side by side.
+
+---
+
+## Sync Status Indicators
+
+Each note card displays its current sync state:
+
+| Indicator | Meaning |
+|-----------|---------|
+| 🟢 Cloud icon | Synced with server |
+| 🟠 Orange dot | Pending — waiting to sync |
+| 🔴 Red dot | Conflict — edited both locally and on server |
+
+---
+
+## Mock REST API
+
+The backend is a minimal REST API built with **Bun v1.3 + Hono**, deployed on **Railway**.
+
+**Live URL:** `https://function-bun-production-b979.up.railway.app`
+
+### Routes
+
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| `GET` | `/notes` | Fetch all notes | 200 |
+| `POST` | `/notes` | Create a note | 201 |
+| `PUT` | `/notes/:id` | Update a note | 200 |
+| `DELETE` | `/notes/:id` | Delete a note | 200 |
+| `GET` | `/api/health` | Health check | 200 |
+
+> **Note:** The current deployment uses in-memory storage. Notes reset on server restart. Add a Railway PostgreSQL plugin for persistence.
 
 ---
 
@@ -101,10 +149,10 @@ flutter pub get
 
 ### Step 3 — Configure the backend URL
 
-Open `lib/features/notes/data/remote/note_remote_datasource.dart` and update the base URL to your deployed server:
+Open `lib/features/notes/data/remote/note_remote_datasource.dart` and update:
 
 ```dart
-const _baseUrl = 'https://your-server.up.railway.app';
+const _baseUrl = 'https://function-bun-production-b979.up.railway.app';
 ```
 
 ---
@@ -134,34 +182,14 @@ Output: `build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
-## Backend Setup (Bun + Hono on Railway)
-
-The backend is a minimal REST API. Deploy it to Railway in one click or run it locally.
-
-### Routes
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/notes` | Fetch all notes |
-| `POST` | `/notes` | Create a note (returns 201) |
-| `PUT` | `/notes/:id` | Update a note |
-| `DELETE` | `/notes/:id` | Delete a note |
-| `GET` | `/api/health` | Health check |
-
-### Run locally
+## Backend — Run Locally
 
 ```bash
 bun install
 bun run index.ts
 ```
 
-### Deploy to Railway
-
-1. Go to [railway.app](https://railway.app) → New Project → Deploy from template → Bun
-2. Replace the generated `index.ts` with the contents of `backend_index.ts` from this repo
-3. Copy the generated domain URL into `_baseUrl` in the app
-
-> **Note:** The current backend uses in-memory storage. Notes are cleared on server restart. Add a Railway PostgreSQL plugin for persistence.
+Then update `_baseUrl` in the app to `http://localhost:3000`.
 
 ---
 
@@ -195,9 +223,9 @@ bun run index.ts
 - Run `flutter clean && flutter pub get` then retry
 
 **Sync returns 404**
-- Verify the backend is deployed and the `_baseUrl` in the app matches your Railway domain
+- Verify the backend is deployed and `_baseUrl` matches your Railway domain
 - Check Railway → Deployments to confirm the service is active
 
 **Notes not syncing after reconnect**
 - The connectivity poll runs every 3 seconds — wait briefly after toggling network
-- Check flutter logs for sync errors: `adb logcat -s flutter`
+- Check flutter logs: `adb logcat -s flutter`
