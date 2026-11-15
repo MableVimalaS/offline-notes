@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an improvement to Scribble
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Explain the user need or pain point.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like to happen?
+      description: Describe the behavior you would expect.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this relate to?
+      options:
+        - Note editing
+        - Offline access
+        - Sync and conflict resolution
+        - Search
+        - Accessibility
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or trade-offs?
+    validations:
+      required: false
